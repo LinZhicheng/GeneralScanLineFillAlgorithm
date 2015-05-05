@@ -162,12 +162,18 @@ void generalScanLineFillAlgorithm(int ymin, int ymax, ScanLine *sl, SCANLINE *SL
 		q = S->first;
 		while (p != NULL){
 			r = new EDGE;
-			r->dx = (p->start.x - p->end.x) / (p->start.y - p->end.y);
+			r->dx = (double)(p->start.x - p->end.x) / (double)(p->start.y - p->end.y);
 			r->x = getLowestPoint(*p).x;
 			r->ymax = getYmax(*p);
 			r->next = NULL;
-			q = r;
-			q = q->next;
+			if (S->first == NULL){
+				S->first = r;
+				q = S->first;
+			}
+			else{
+				q->next = r;
+				q = q->next;
+			}
 			p = p->next;
 		}
 		s = s->up;
@@ -175,20 +181,31 @@ void generalScanLineFillAlgorithm(int ymin, int ymax, ScanLine *sl, SCANLINE *SL
 	}
 
 	SCANLINE *AET = new SCANLINE;
+	AET->first = NULL;
+	AET->up = NULL;
 	EDGE *l, *m, *n;
 	S = SL;
 	while (S != NULL){
 		AET->y = S->y;
-		AET->first = S->first;
+		if (AET->first == NULL)
+			AET->first = S->first;
 		l = AET->first;
-		while (l != NULL){
-			if (l->ymax < S->y){
-				m = l;
-				l = l->next;
+		m = AET->first;
+		while (m != NULL){
+			if (m->ymax < S->y){
+				if (m == l){
+					l = m->next;
+					m = l;
+				}
+				else{
+					l->next = m->next;
+					m = l->next;
+				}
 			}
 			else{
-				l->x += l->dx;
-				l->x = ROUND(l->x);
+				m->x += m->dx;
+				m->x = ROUND(m->x);
+				m = m->next;
 				l = l->next;
 			}
 		}
@@ -219,6 +236,9 @@ void generalScanLineFillAlgorithm(int ymin, int ymax, ScanLine *sl, SCANLINE *SL
 		m = l->next;
 		while (l != NULL&&m != NULL){
 			fill(S->y, l->x, m->x);
+			if (l->next == NULL || m->next == NULL){
+				break;
+			}
 			l = m->next;
 			m = l->next;
 		}
@@ -252,6 +272,7 @@ void display(void)   // Create The Display Function
 	point[3].x = 250; point[3].y = 140;
 	point[4].x = 210; point[4].y = 230;
 
+	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_POLYGON);
 	for (int i = 0; i < POINT_NUM; i++){
 		glVertex2d(point[i].x, point[i].y);
@@ -291,7 +312,7 @@ void display(void)   // Create The Display Function
 			s = s->up;
 			S->up = new SCANLINE;
 			S = S->up;
-		}	
+		}
 	}
 
 	for (int i = 0; i < POINT_NUM; i++){
