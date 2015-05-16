@@ -204,7 +204,7 @@ void generalScanLineFillAlgorithm(int ymin, int ymax, ScanLine *sl, SCANLINE *SL
 			}
 			else{
 				m->x += m->dx;
-				m->x = ROUND(m->x);
+				//m->x = ROUND(m->x);
 				m = m->next;
 				l = l->next;
 			}
